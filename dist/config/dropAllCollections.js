@@ -12,22 +12,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.dropAllCollections = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
-const MONGO_URI = process.env.MONGO_URI;
-if (!MONGO_URI) {
-    throw new Error("MONGO_URI is not defined in the environment variables");
-}
-const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
+const db_1 = __importDefault(require("./db"));
+const dropAllCollections = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("Connecting to MongoDB...");
-        yield mongoose_1.default.connect(MONGO_URI);
-        console.log("MongoDB connected");
+        yield (0, db_1.default)();
+        console.log("Dropping all collections...");
+        const collections = ["users", "carts", "products"];
+        for (const collection of collections) {
+            if (mongoose_1.default.connection.db) {
+                yield mongoose_1.default.connection.db.dropCollection(collection);
+            }
+        }
+        console.log("All collections dropped successfully");
+        yield mongoose_1.default.disconnect();
+        console.log("Disconnected from MongoDB");
     }
     catch (error) {
-        console.error("MongoDB connection failed:", error.message);
-        process.exit(1);
+        console.error("Error dropping collections:", error);
     }
 });
-exports.default = connectDB;
+exports.dropAllCollections = dropAllCollections;
+(0, exports.dropAllCollections)();

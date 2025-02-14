@@ -32,10 +32,52 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const userSchema = new mongoose_1.Schema({
-    username: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    isAdmin: { type: Boolean, default: false },
+    cart: { type: mongoose_1.Schema.Types.ObjectId, ref: "Cart" },
+}, {
+    timestamps: true,
+    toJSON: {
+        virtuals: true,
+        transform: function (_, ret) {
+            ret.id = ret._id;
+            delete ret._id;
+            delete ret.__v;
+            return ret;
+        },
+    },
+    toObject: {
+        virtuals: true,
+        transform: function (_, ret) {
+            ret.id = ret._id;
+            delete ret._id;
+            delete ret.__v;
+            return ret;
+        },
+    },
+});
+userSchema.pre("save", function (next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (this.isNew && !this.isAdmin) {
+            const Cart = mongoose_1.default.model("Cart");
+            const cart = yield Cart.create({ user: this._id });
+            this.cart = cart._id;
+        }
+        next();
+    });
 });
 exports.default = mongoose_1.default.model("User", userSchema);

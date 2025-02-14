@@ -14,20 +14,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const seedUsers_1 = __importDefault(require("./seedUsers"));
+const seedProducts_1 = __importDefault(require("./seedProducts"));
+const db_1 = __importDefault(require("../config/db"));
 dotenv_1.default.config();
-const MONGO_URI = process.env.MONGO_URI;
-if (!MONGO_URI) {
-    throw new Error("MONGO_URI is not defined in the environment variables");
-}
-const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
+const seedDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("Connecting to MongoDB...");
-        yield mongoose_1.default.connect(MONGO_URI);
-        console.log("MongoDB connected");
+        console.log("Seeding database...");
+        yield (0, db_1.default)();
+        yield (0, seedUsers_1.default)();
+        yield (0, seedProducts_1.default)();
+        console.log("Database seeded successfully!");
     }
     catch (error) {
-        console.error("MongoDB connection failed:", error.message);
-        process.exit(1);
+        console.error("Error seeding database:\n", error);
+    }
+    finally {
+        yield mongoose_1.default.disconnect();
     }
 });
-exports.default = connectDB;
+seedDatabase();
